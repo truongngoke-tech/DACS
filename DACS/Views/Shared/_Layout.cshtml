@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EDUTECH AI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        :root { --sidebar-width: 260px; }
+        body { background:#f8f9fa; font-family:'Segoe UI',sans-serif; overflow-x:hidden; }
+        .sidebar { width:var(--sidebar-width); background:#1a202c; color:white; position:fixed; height:100vh; z-index:1040; overflow-y:auto; }
+        .sidebar-brand { padding:18px 16px; border-bottom:1px solid #2d3748; }
+        .sidebar-section { padding:10px 20px 4px; font-size:.65rem; text-transform:uppercase; color:#718096; letter-spacing:.08em; margin-top:6px; }
+        .sidebar a { color:#a0aec0; text-decoration:none; display:flex; align-items:center; gap:10px; padding:10px 20px; border-left:3px solid transparent; transition:.2s; font-size:.875rem; }
+        .sidebar a:hover { background:#2d3748; color:white; padding-left:26px; }
+        .sidebar a.active { background:#2d3748; color:white; border-left-color:#4299e1; font-weight:600; }
+        .sidebar a .nav-icon { width:18px; text-align:center; flex-shrink:0; }
+        .main-content { margin-left:var(--sidebar-width); padding:25px; min-height:100vh; }
+        .header-nav { background:white; padding:12px 24px; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.07); margin-bottom:26px; position:relative; z-index:1000; display:flex; justify-content:space-between; align-items:center; }
+        .dropdown-menu { border-radius:12px; border:none; box-shadow:0 8px 24px rgba(0,0,0,.12); min-width:220px; z-index:2100; }
+        .modal-backdrop { z-index:1045!important; }
+        .modal { z-index:1050!important; }
+        /* Notification badge */
+        .notif-badge { position:absolute; top:-4px; right:-4px; font-size:.6rem; min-width:16px; height:16px; line-height:16px; padding:0 4px; }
+        .notif-item { padding:10px 16px; border-bottom:1px solid #f1f1f1; cursor:pointer; transition:.15s; }
+        .notif-item:hover { background:#f8f9fa; }
+        .notif-item.unread { background:#fffbeb; border-left:3px solid #f59e0b; }
+        /* Avatar sidebar */
+        .sidebar-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; }
+    </style>
+</head>
+<body>
+<nav class="sidebar shadow">
+    <div class="sidebar-brand d-flex align-items-center gap-2">
+        <i class="fas fa-graduation-cap text-info fs-5"></i>
+        <h5 class="fw-bold m-0 text-white">EDUTECH AI</h5>
+    </div>
+
+    @{
+        var ctrl = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var act  = ViewContext.RouteData.Values["Action"]?.ToString();
+    }
+
+    <div class="sidebar-section">Học tập</div>
+    <a href="/Home/Index" class="@(ctrl=="Home"?"active":"")"><i class="fas fa-home nav-icon"></i> Trang chủ</a>
+    <a href="/Exam/Index" class="@(ctrl=="Exam"&&act=="Index"?"active":"")"><i class="fas fa-th-list nav-icon"></i> Danh sách đề thi</a>
+    <a href="/Exam/History" class="@(ctrl=="Exam"&&(act=="History"||act=="Result")?"active":"")"><i class="fas fa-history nav-icon"></i> Nhật ký học tập</a>
+    <a href="/AI/Roadmap" class="@(ctrl=="AI"?"active":"")"><i class="fas fa-route nav-icon"></i> Tiến trình học</a>
+
+    @if (User.Identity!.IsAuthenticated)
+    {
+        <div class="sidebar-section">Cá nhân</div>
+        <a href="/User/Profile" class="@(ctrl=="User"?"active":"")"><i class="fas fa-user-circle nav-icon"></i> Hồ sơ của tôi</a>
+        <a href="/Exam/YeuThich" class="@(ctrl=="Exam"&&act=="YeuThich"?"active":"")"><i class="fas fa-bookmark nav-icon"></i> Đề đã lưu</a>
+        <a href="/Exam/SoTayCauSai" class="@(ctrl=="Exam"&&act=="SoTayCauSai"?"active":"")"><i class="fas fa-book nav-icon"></i> Sổ tay câu sai</a>
+        <a href="/BaoCao/CuaToi" class="@(ctrl=="BaoCao"&&act=="CuaToi"?"active":"")"><i class="fas fa-flag nav-icon"></i> Báo cáo lỗi</a>
+
+        @if (User.IsInRole("Admin") || User.IsInRole("Teacher"))
+        {
+            <div class="sidebar-section">Quản lý</div>
+            <a href="/Exam/Create" class="@(ctrl=="Exam"&&act=="Create"?"active":"")"><i class="fas fa-plus-circle nav-icon"></i> Tạo đề thi</a>
+        }
+        @if (User.IsInRole("Admin"))
+        {
+            <a href="/Admin/Users"       class="@(ctrl=="Admin"&&act=="Users"?"active":"")">      <i class="fas fa-users-cog nav-icon"></i> Người dùng</a>
+            <a href="/Admin/ChuDe"       class="@(ctrl=="Admin"&&act=="ChuDe"?"active":"")">      <i class="fas fa-tags nav-icon"></i> Chủ đề</a>
+            <a href="/Admin/BangXepHang" class="@(ctrl=="Admin"&&act=="BangXepHang"?"active":"")"><i class="fas fa-trophy nav-icon"></i> Bảng xếp hạng</a>
+                    <a href="/BaoCao/QuanLy" class="@(ctrl=="BaoCao"&&act=="QuanLy"?"active":"")"><i class="fas fa-flag nav-icon"></i> Báo cáo lỗi</a>
+        }
+    }
+</nav>
+
+<main class="main-content">
+    <header class="header-nav">
+        <h5 class="m-0 fw-bold text-dark">@ViewData["Title"]</h5>
+        <div class="d-flex align-items-center gap-2">
+            @if (User.Identity!.IsAuthenticated)
+            {
+                <!-- Chuông thông báo -->
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm rounded-circle position-relative shadow-sm"
+                            type="button" data-bs-toggle="dropdown" id="notifBtn"
+                            style="width:36px;height:36px;" onclick="loadNotifs()">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge bg-danger rounded-pill notif-badge" id="notifCount" style="display:none">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0" style="width:320px;max-height:400px;overflow-y:auto;">
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                            <span class="fw-bold small">Thông báo</span>
+                            <button class="btn btn-link btn-sm p-0 text-muted" onclick="docTatCa()">Đọc tất cả</button>
+                        </div>
+                        <div id="notifList"><div class="text-center text-muted py-3 small">Đang tải...</div></div>
+                    </div>
+                </div>
+
+                <!-- User dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle shadow-sm"
+                            type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1 text-primary"></i>@User.Identity.Name
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end mt-2">
+                        <li><a class="dropdown-item py-2" href="/User/Profile"><i class="fas fa-user-circle me-2 text-primary"></i>Hồ sơ</a></li>
+                        <li><a class="dropdown-item py-2" href="/Exam/YeuThich"><i class="fas fa-bookmark me-2 text-warning"></i>Đề đã lưu</a></li>
+                        <li><a class="dropdown-item py-2" href="/Exam/SoTayCauSai"><i class="fas fa-book me-2 text-danger"></i>Sổ tay câu sai</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form asp-area="Identity" asp-page="/Account/Logout"
+                                  asp-route-returnUrl="@Url.Action("Index","Home",new{area=""})" method="post">
+                                <button type="submit" class="dropdown-item py-2 text-danger fw-bold">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-sm rounded-pill px-4">Đăng nhập</a>
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-sm rounded-pill px-4">Đăng ký</a>
+            }
+        </div>
+    </header>
+    <div class="animate__animated animate__fadeIn">@RenderBody()</div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===== NOTIFICATION SYSTEM =====
+let notifLoaded = false;
+async function loadNotifs() {
+    if (notifLoaded) return;
+    notifLoaded = true;
+    try {
+        const res = await fetch('/Notification/GetAll');
+        const data = await res.json();
+        const list = document.getElementById('notifList');
+        const badge = document.getElementById('notifCount');
+
+        if (data.count > 0) { badge.style.display='inline'; badge.textContent = data.count > 9 ? '9+' : data.count; }
+
+        if (!data.items.length) {
+            list.innerHTML = '<div class="text-center text-muted py-4 small"><i class="fas fa-bell-slash d-block mb-2 fs-4"></i>Chưa có thông báo</div>';
+            return;
+        }
+        const icons = { info:'text-info fa-info-circle', success:'text-success fa-check-circle', warning:'text-warning fa-exclamation-triangle' };
+        list.innerHTML = data.items.map(t => `
+            <div class="notif-item ${t.daDoc?'':'unread'}" onclick="readNotif(${t.id}, '${t.duongDan||''}', this)">
+                <div class="d-flex gap-2">
+                    <i class="fas ${icons[t.loaiIcon]||icons.info} mt-1 flex-shrink-0"></i>
+                    <div>
+                        <div class="small">${t.noiDung}</div>
+                        <div class="text-muted" style="font-size:.7rem;">${t.thoiGian}</div>
+                    </div>
+                </div>
+            </div>`).join('');
+    } catch(e) { document.getElementById('notifList').innerHTML = '<div class="text-center text-muted py-3 small">Lỗi tải thông báo</div>'; }
+}
+
+async function readNotif(id, url, el) {
+    el.classList.remove('unread');
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    await fetch('/Notification/DanhDauDaDoc', {
+        method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded','RequestVerificationToken':token},
+        body:`id=${id}`
+    });
+    const badge = document.getElementById('notifCount');
+    const count = parseInt(badge.textContent) - 1;
+    if (count <= 0) badge.style.display='none'; else badge.textContent = count > 9 ? '9+' : count;
+    if (url) window.location.href = url;
+}
+
+async function docTatCa() {
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    await fetch('/Notification/DocTatCa', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded','RequestVerificationToken':token}, body:'' });
+    document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+    document.getElementById('notifCount').style.display='none';
+}
+
+// Load badge khi trang load
+(async () => {
+    try {
+        const res = await fetch('/Notification/GetAll');c
+        const data = await res.json();
+        if (data.count > 0) {
+            const badge = document.getElementById('notifCount');
+            badge.style.display='inline';
+            badge.textContent = data.count > 9 ? '9+' : data.count;
+        }
+    } catch(e) {}
+})();
+</script>
+@Html.AntiForgeryToken()
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

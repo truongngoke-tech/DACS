@@ -1,0 +1,95 @@
+@model DACS.Models.CauHoi
+
+@{
+    ViewData["Title"] = "Thêm câu hỏi";
+    var deThi = ViewBag.DeThi as DACS.Models.DeThi;
+}
+
+<div class="container py-4" style="max-width:680px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index">Đề thi</a></li>
+                    <li class="breadcrumb-item"><a asp-action="ManageCauHoi" asp-route-id="@deThi?.MaDeThi">@deThi?.TenDeThi</a></li>
+                    <li class="breadcrumb-item active">Thêm câu hỏi</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold m-0 text-primary"><i class="fas fa-plus-circle me-2"></i>Thêm câu hỏi mới</h3>
+        </div>
+
+        <form asp-action="AddCauHoi" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="MaDeThi" />
+            <input type="hidden" asp-for="MaChuDe" />
+
+            <div class="mb-3">
+                <label asp-for="NoiDung" class="form-label fw-bold">Nội dung câu hỏi <span class="text-danger">*</span></label>
+                <textarea asp-for="NoiDung" class="form-control" rows="3" placeholder="Nhập nội dung câu hỏi..."></textarea>
+                <span asp-validation-for="NoiDung" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PhuongAnA" class="form-label fw-bold">
+                        <span class="badge bg-secondary me-1">A</span> Phương án A
+                    </label>
+                    <input asp-for="PhuongAnA" class="form-control rounded-pill" placeholder="Nhập phương án A..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhuongAnB" class="form-label fw-bold">
+                        <span class="badge bg-secondary me-1">B</span> Phương án B
+                    </label>
+                    <input asp-for="PhuongAnB" class="form-control rounded-pill" placeholder="Nhập phương án B..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhuongAnC" class="form-label fw-bold">
+                        <span class="badge bg-secondary me-1">C</span> Phương án C
+                    </label>
+                    <input asp-for="PhuongAnC" class="form-control rounded-pill" placeholder="Nhập phương án C..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhuongAnD" class="form-label fw-bold">
+                        <span class="badge bg-secondary me-1">D</span> Phương án D
+                    </label>
+                    <input asp-for="PhuongAnD" class="form-control rounded-pill" placeholder="Nhập phương án D..." />
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="DapAnDung" class="form-label fw-bold">Đáp án đúng <span class="text-danger">*</span></label>
+                    <select asp-for="DapAnDung" class="form-select rounded-pill">
+                        <option value="">-- Chọn đáp án đúng --</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                    <span asp-validation-for="DapAnDung" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="MucDoKho" class="form-label fw-bold">Độ khó</label>
+                    <select asp-for="MucDoKho" class="form-select rounded-pill" asp-items="ViewBag.DanhSachMucDo">
+                        <option value="">-- Chọn độ khó --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 fw-bold">
+                    <i class="fas fa-save me-2"></i>Lưu câu hỏi
+                </button>
+                <a asp-action="ManageCauHoi" asp-route-id="@deThi?.MaDeThi" class="btn btn-outline-secondary rounded-pill px-4 w-100">
+                    Quay lại
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,133 @@
+@{
+    ViewData["Title"] = "Dashboard quản trị";
+    int tongUser      = ViewBag.TongUser ?? 0;
+    int tongDeThi     = ViewBag.TongDeThi ?? 0;
+    int tongCauHoi    = ViewBag.TongCauHoi ?? 0;
+    int tongLuotThi   = ViewBag.TongLuotThi ?? 0;
+    double diemTB     = ViewBag.DiemTrungBinh ?? 0.0;
+    var topDe         = ViewBag.TopDe as IEnumerable<dynamic> ?? new List<dynamic>();
+    var hoatDongGanDay = ViewBag.HoatDongGanDay as IEnumerable<dynamic> ?? new List<dynamic>();
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="mb-4">
+        <h3 class="fw-bold m-0">Dashboard quản trị</h3>
+        <p class="text-muted small mb-0">Tổng quan hệ thống EDUTECH AI</p>
+    </div>
+
+    @* Thống kê tổng quan *@
+    <div class="row g-3 mb-4">
+        @foreach (var (label, value, color, icon) in new[] {
+            ("Người dùng",  tongUser.ToString(),        "primary", "fas fa-users"),
+            ("Đề thi",      tongDeThi.ToString(),       "success", "fas fa-file-alt"),
+            ("Câu hỏi",     tongCauHoi.ToString(),      "warning", "fas fa-question-circle"),
+            ("Lượt thi",    tongLuotThi.ToString(),     "info",    "fas fa-clipboard-check"),
+        })
+        {
+            <div class="col-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="rounded-3 p-2 bg-@color bg-opacity-10">
+                            <i class="@icon text-@color fs-5"></i>
+                        </div>
+                        <div class="text-muted small fw-bold">@label</div>
+                    </div>
+                    <div class="fw-bold fs-2 text-@color">@value</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row g-4 mb-4">
+        @* Điểm trung bình hệ thống *@
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center h-100">
+                <div class="text-muted small fw-bold mb-2">Điểm TB toàn hệ thống</div>
+                <div class="display-4 fw-bold @(diemTB >= 5 ? "text-success" : "text-danger")">
+                    @diemTB.ToString("F1")
+                </div>
+                <div class="text-muted small mt-1">/ 10 điểm</div>
+                <div class="progress mt-3" style="height:8px;">
+                    <div class="progress-bar bg-@(diemTB >= 5 ? "success" : "danger") progress-bar-striped"
+                         style="width:@((diemTB * 10).ToString("F0", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                </div>
+            </div>
+        </div>
+
+        @* Top đề thi được làm nhiều nhất *@
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold m-0"><i class="fas fa-fire text-danger me-2"></i>Đề thi hot nhất</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Đề thi</th>
+                                <th class="text-center">Lượt thi</th>
+                                <th class="text-center">Điểm TB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var de in topDe)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-semibold">@de.TenDeThi</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary rounded-pill px-3">@de.SoLuot</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge @(de.DiemTB >= 5 ? "bg-success" : "bg-danger") rounded-pill px-3">
+                                            @de.DiemTB
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Hoạt động gần đây *@
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+            <h5 class="fw-bold m-0"><i class="fas fa-clock text-primary me-2"></i>Hoạt động gần đây</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Người dùng</th>
+                        <th>Đề thi</th>
+                        <th class="text-center">Điểm</th>
+                        <th class="text-center">Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!hoatDongGanDay.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-4">Chưa có hoạt động nào</td></tr>
+                    }
+                    @foreach (var hd in hoatDongGanDay)
+                    {
+                        string mau = hd.Diem >= 8 ? "success" : hd.Diem >= 5 ? "primary" : "danger";
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-semibold">@hd.HoTen</div>
+                                <div class="text-muted" style="font-size:.75rem;">@hd.Email</div>
+                            </td>
+                            <td>@hd.TenDe</td>
+                            <td class="text-center">
+                                <span class="badge bg-@mau rounded-pill px-3">@hd.Diem đ</span>
+                            </td>
+                            <td class="text-center text-muted">@hd.ThoiGian</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

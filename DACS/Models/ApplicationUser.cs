@@ -1,0 +1,11 @@
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace DACS.Models
+{
+    public class ApplicationUser : IdentityUser
+    {
+        public string? FullName { get; set; }
+        public string? AvatarUrl { get; set; }
+        // Vai trò được Identity Role quản lý tự động
+    }
+}

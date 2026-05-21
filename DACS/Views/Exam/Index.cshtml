@@ -1,0 +1,644 @@
+@model IEnumerable<DACS.Models.DeThi>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Danh sách đề thi";
+    bool canManage = User.IsInRole("Admin") || User.IsInRole("Teacher");
+    string? mucDoFilter = ViewBag.MucDoFilter as string;
+    var bookmarks = ViewBag.Bookmarks as List<int> ?? new List<int>();
+    var totalExam = Model?.Count() ?? 0;
+}
+
+<style>
+    .exam-vip {
+        position: relative;
+        padding-bottom: 36px;
+    }
+
+        .exam-vip::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 15% 8%, rgba(99,102,241,.24), transparent 28%), radial-gradient(circle at 88% 12%, rgba(34,211,238,.20), transparent 30%), radial-gradient(circle at 50% 100%, rgba(236,72,153,.13), transparent 35%);
+            z-index: -1;
+        }
+
+    .exam-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 36px;
+        padding: 36px;
+        color: white;
+        background: linear-gradient(135deg, rgba(15,23,42,.96), rgba(30,41,59,.92)), radial-gradient(circle at 20% 20%, rgba(99,102,241,.9), transparent 34%), radial-gradient(circle at 86% 25%, rgba(34,211,238,.68), transparent 36%), radial-gradient(circle at 55% 95%, rgba(236,72,153,.45), transparent 38%);
+        box-shadow: 0 34px 90px rgba(15,23,42,.26);
+        border: 1px solid rgba(255,255,255,.15);
+    }
+
+        .exam-hero::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,.18), transparent);
+            transform: translateX(-100%);
+            animation: heroShine 5.5s infinite;
+        }
+
+    @@keyframes heroShine {
+        0% {
+            transform: translateX(-100%);
+        }
+
+        45%, 100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .exam-hero::after {
+        content: "🧠";
+        position: absolute;
+        right: 45px;
+        bottom: -34px;
+        font-size: 170px;
+        opacity: .12;
+        filter: drop-shadow(0 20px 25px rgba(0,0,0,.35));
+    }
+
+    .hero-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 9px 15px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.13);
+        border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(14px);
+        color: #e0f2fe;
+        font-size: .82rem;
+        font-weight: 850;
+    }
+
+    .hero-title {
+        margin: 18px 0 10px;
+        font-size: clamp(2rem, 4vw, 4rem);
+        font-weight: 950;
+        line-height: .95;
+        letter-spacing: -2px;
+    }
+
+        .hero-title span {
+            background: linear-gradient(90deg, #a5f3fc, #c4b5fd, #f9a8d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .hero-desc {
+        max-width: 640px;
+        color: #cbd5e1;
+        font-size: 1.02rem;
+        margin: 0;
+    }
+
+    .hero-stat {
+        min-width: 180px;
+        border-radius: 28px;
+        padding: 24px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(16px);
+        text-align: center;
+    }
+
+        .hero-stat .num {
+            font-size: 3rem;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+    .toolbar-vip {
+        margin-top: 24px;
+        padding: 18px;
+        border-radius: 28px;
+        background: rgba(255,255,255,.86);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.08);
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+        .search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .search-box input {
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 14px 18px 14px 46px;
+            font-weight: 700;
+            background: #f8fafc;
+        }
+
+            .search-box input:focus {
+                border-color: #6366f1;
+                box-shadow: 0 0 0 .25rem rgba(99,102,241,.15);
+            }
+
+    .filter-btn {
+        border-radius: 999px;
+        padding: 11px 18px;
+        font-weight: 850;
+        transition: .22s;
+    }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
+    .top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: end;
+    }
+
+    .glass-action {
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-weight: 850;
+        text-decoration: none;
+        transition: .22s;
+    }
+
+        .glass-action:hover {
+            transform: translateY(-2px);
+        }
+
+    .exam-grid {
+        margin-top: 26px;
+    }
+
+    .exam-card-vip {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,.75);
+        background: rgba(255,255,255,.88);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 22px 55px rgba(15,23,42,.09);
+        transition: .25s;
+    }
+
+        .exam-card-vip:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 34px 85px rgba(15,23,42,.16);
+        }
+
+        .exam-card-vip::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            height: 7px;
+            background: linear-gradient(90deg, #6366f1, #22d3ee, #ec4899);
+        }
+
+    .exam-card-body {
+        padding: 24px;
+    }
+
+    .exam-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+    }
+
+    .topic-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #4f46e5;
+        font-weight: 850;
+        font-size: .78rem;
+    }
+
+    .level-badge {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 850;
+        font-size: .76rem;
+    }
+
+    .bookmark-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0 !important;
+        display: grid;
+        place-items: center;
+        transition: .2s;
+    }
+
+        .bookmark-btn:hover {
+            transform: scale(1.08);
+            background: #fff7ed;
+        }
+
+    .exam-icon {
+        width: 62px;
+        height: 62px;
+        border-radius: 22px;
+        display: grid;
+        place-items: center;
+        font-size: 27px;
+        color: white;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        box-shadow: 0 18px 35px rgba(79,70,229,.25);
+        margin-bottom: 18px;
+    }
+
+    .exam-name {
+        color: #0f172a;
+        font-size: 1.18rem;
+        font-weight: 950;
+        min-height: 58px;
+        letter-spacing: -.2px;
+    }
+
+    .exam-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: .78rem;
+        font-weight: 800;
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .exam-footer-vip {
+        padding: 0 24px 24px;
+    }
+
+    .btn-start {
+        width: 100%;
+        border: 0;
+        border-radius: 18px;
+        padding: 13px 16px;
+        color: white;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        box-shadow: 0 16px 32px rgba(79,70,229,.25);
+        transition: .23s;
+    }
+
+        .btn-start:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 20px 42px rgba(79,70,229,.36);
+        }
+
+    .btn-practice {
+        width: 100%;
+        margin-top: 10px;
+        border-radius: 18px;
+        padding: 11px 14px;
+        font-weight: 850;
+    }
+
+    .manage-zone {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+        .manage-zone .btn {
+            border-radius: 16px;
+            font-weight: 800;
+        }
+
+    .empty-state-vip {
+        border-radius: 34px;
+        padding: 54px 24px;
+        text-align: center;
+        background: rgba(255,255,255,.88);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.08);
+    }
+
+    .empty-icon {
+        width: 88px;
+        height: 88px;
+        margin: 0 auto 18px;
+        border-radius: 30px;
+        display: grid;
+        place-items: center;
+        font-size: 42px;
+        color: white;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        box-shadow: 0 18px 36px rgba(79,70,229,.24);
+    }
+
+    @@media (max-width: 992px) {
+        .hero-inner {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .hero-stat {
+            width: 100%;
+        }
+
+        .top-actions {
+            justify-content: start;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .exam-hero {
+            padding: 26px;
+        }
+
+        .toolbar-vip {
+            padding: 14px;
+        }
+    }
+</style>
+
+<div class="exam-vip">
+    <section class="exam-hero animate__animated animate__fadeIn">
+        <div class="hero-inner">
+            <div>
+                <div class="hero-badge">
+                    <i class="fas fa-wand-magic-sparkles text-info"></i>
+                    EDUTECH AI Exam Library
+                </div>
+
+                <h1 class="hero-title">
+                    Thư viện <span>đề thi</span>
+                </h1>
+
+                <p class="hero-desc">
+                    Chọn đề thi phù hợp, luyện tập thông minh, lưu đề yêu thích và bắt đầu hành trình tăng điểm cùng AI.
+                </p>
+            </div>
+
+            <div class="hero-stat">
+                <div class="num">@totalExam</div>
+                <div class="small fw-bold text-white-50 mt-2">Đề thi hiện có</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="toolbar-vip">
+        <div class="row g-3 align-items-center">
+            <div class="col-xl-5">
+                <div class="search-box">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text"
+                           id="searchInput"
+                           class="form-control"
+                           placeholder="Tìm kiếm tên đề thi..." />
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a asp-action="Index"
+                       class="btn filter-btn @(string.IsNullOrEmpty(mucDoFilter) ? "btn-primary" : "btn-outline-primary")">
+                        Tất cả
+                    </a>
+
+                    @foreach (var md in new[] { "Dễ", "Trung bình", "Khó" })
+                    {
+                        var bc = md == "Dễ" ? "success" : md == "Khó" ? "danger" : "warning";
+
+                        <a asp-action="Index"
+                           asp-route-mucDo="@md"
+                           class="btn filter-btn @(mucDoFilter == md ? $"btn-{bc}" : $"btn-outline-{bc}")">
+                            @md
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="col-xl-3">
+                <div class="top-actions">
+                    <a asp-action="YeuThich" class="btn btn-outline-warning glass-action">
+                        <i class="fas fa-bookmark me-1"></i>Đã lưu
+                    </a>
+
+                    @if (canManage)
+                    {
+                        <a asp-action="Create" class="btn btn-dark glass-action">
+                            <i class="fas fa-plus me-2"></i>Tạo đề
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 exam-grid" id="examGrid">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                var mauDo = item.MucDoKho == "Dễ" ? "success" : item.MucDoKho == "Khó" ? "danger" : "warning";
+                bool isBookmarked = bookmarks.Contains(item.MaDeThi);
+
+                <div class="col-md-6 col-xl-4 exam-card-wrapper">
+                    <div class="exam-card-vip">
+                        <div class="exam-card-body">
+                            <div class="exam-top">
+                                <span class="topic-badge">
+                                    <i class="fas fa-layer-group"></i>
+                                    @(item.ChuDe?.TenChuDe ?? "Chung")
+                                </span>
+
+                                <div class="d-flex gap-2 align-items-center">
+                                    @if (!string.IsNullOrEmpty(item.MucDoKho))
+                                    {
+                                        <span class="level-badge bg-@mauDo-subtle text-@mauDo">
+                                            @item.MucDoKho
+                                        </span>
+                                    }
+
+                                    <button class="bookmark-btn"
+                                            data-id="@item.MaDeThi"
+                                            data-bookmarked="@isBookmarked.ToString().ToLower()"
+                                            onclick="toggleBookmark(this)"
+                                            title="@(isBookmarked ? "Bỏ lưu" : "Lưu đề thi")">
+                                        <i class="fas fa-bookmark @(isBookmarked ? "text-warning" : "text-muted")"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="exam-icon">
+                                <i class="fas fa-file-circle-question"></i>
+                            </div>
+
+                            <h5 class="exam-name">@item.TenDeThi</h5>
+
+                            <div class="exam-meta">
+                                <span class="meta-pill">
+                                    <i class="fas fa-circle-question text-primary"></i>
+                                    @(item.SoCauHoi ?? 0) câu
+                                </span>
+
+                                <span class="meta-pill">
+                                    <i class="far fa-clock text-info"></i>
+                                    @(item.ThoiGian ?? 60) phút
+                                </span>
+
+                                <span class="meta-pill">
+                                    <i class="fas fa-robot text-success"></i>
+                                    AI hỗ trợ
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="exam-footer-vip">
+                            <a href="/Exam/Details/@item.MaDeThi" class="btn-start">
+                                <i class="fas fa-play"></i>
+                                Bắt đầu thi
+                            </a>
+
+                            <a href="/Exam/Practice/@item.MaDeThi"
+                               class="btn btn-outline-success btn-practice">
+                                <i class="fas fa-book-open me-2"></i>
+                                Luyện tập xem đáp án
+                            </a>
+
+                            @if (canManage)
+                            {
+                                <div class="manage-zone">
+                                    <a asp-action="ManageCauHoi"
+                                       asp-route-id="@item.MaDeThi"
+                                       class="btn btn-outline-info btn-sm flex-fill">
+                                        <i class="fas fa-list-ul me-1"></i>Câu hỏi
+                                    </a>
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.MaDeThi"
+                                       class="btn btn-outline-warning btn-sm px-3">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+
+                                    <form asp-action="Delete"
+                                          asp-route-id="@item.MaDeThi"
+                                          method="post"
+                                          onsubmit="return confirm('Xóa đề thi: @item.TenDeThi?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-3">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="empty-state-vip">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+
+                    <h4 class="fw-black text-dark">Chưa có đề thi nào</h4>
+
+                    <p class="text-muted mb-0">
+                        Chưa có đề thi nào @(string.IsNullOrEmpty(mucDoFilter) ? "" : $"ở độ khó '{mucDoFilter}'").
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('searchInput')?.addEventListener('input', function () {
+            const kw = this.value.toLowerCase().trim();
+
+            document.querySelectorAll('.exam-card-wrapper').forEach(card => {
+                const name = card.querySelector('.exam-name')?.textContent.toLowerCase() || '';
+                card.style.display = name.includes(kw) ? '' : 'none';
+            });
+        });
+
+        async function toggleBookmark(btn) {
+            const id = btn.dataset.id;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                ?? document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]
+                ?? '';
+
+            try {
+                const res = await fetch('/Exam/ToggleBookmark', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: 'maDeThi=' + id
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    btn.dataset.bookmarked = data.isBookmarked;
+
+                    const icon = btn.querySelector('i');
+                    icon.className = `fas fa-bookmark ${data.isBookmarked ? 'text-warning' : 'text-muted'}`;
+
+                    btn.title = data.isBookmarked ? 'Bỏ lưu' : 'Lưu đề thi';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+
+    @Html.AntiForgeryToken()
+}

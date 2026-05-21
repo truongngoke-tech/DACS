@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "Đổi mật khẩu";
+}
+
+<div class="container py-4" style="max-width:520px;">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h4 class="fw-bold mb-4">
+            <i class="fas fa-lock me-2 text-primary"></i>Đổi mật khẩu
+        </h4>
+
+        <form asp-action="DoiMatKhau" asp-controller="User" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Mật khẩu hiện tại</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-lock text-muted" style="font-size:.85rem;"></i>
+                    </span>
+                    <input type="password" name="matKhauCu" class="form-control border-start-0 rounded-end-pill"
+                           placeholder="Nhập mật khẩu hiện tại..." required />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Mật khẩu mới</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-key text-muted" style="font-size:.85rem;"></i>
+                    </span>
+                    <input type="password" name="matKhauMoi" id="matKhauMoi"
+                           class="form-control border-start-0 rounded-end-pill"
+                           placeholder="Tối thiểu 6 ký tự..." required minlength="6" />
+                </div>
+                <div class="form-text">Mật khẩu phải có ít nhất 6 ký tự.</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold small">Xác nhận mật khẩu mới</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-check-double text-muted" style="font-size:.85rem;"></i>
+                    </span>
+                    <input type="password" name="xacNhanMatKhau" id="xacNhanMatKhau"
+                           class="form-control border-start-0 rounded-end-pill"
+                           placeholder="Nhập lại mật khẩu mới..." required />
+                </div>
+                <div id="matchMsg" class="form-text"></div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold">
+                    <i class="fas fa-save me-2"></i>Cập nhật mật khẩu
+                </button>
+                <a href="/User/Profile" class="btn btn-outline-secondary rounded-pill py-2">
+                    Quay lại hồ sơ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const mk = document.getElementById('matKhauMoi');
+const xn = document.getElementById('xacNhanMatKhau');
+const msg = document.getElementById('matchMsg');
+function checkMatch() {
+    if (!xn.value) { msg.textContent = ''; return; }
+    if (mk.value === xn.value) {
+        msg.textContent = '✓ Mật khẩu khớp';
+        msg.className = 'form-text text-success fw-bold';
+    } else {
+        msg.textContent = '✗ Mật khẩu không khớp';
+        msg.className = 'form-text text-danger';
+    }
+}
+mk.addEventListener('input', checkMatch);
+xn.addEventListener('input', checkMatch);
+</script>
+}

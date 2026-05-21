@@ -1,0 +1,153 @@
+@using DACS.Models
+@model IEnumerable<BaoCaoLoi>
+@{
+    ViewData["Title"] = "Quản lý báo cáo lỗi";
+    string? trangThaiFilter = ViewBag.TrangThaiFilter as string;
+    int soChoXuLy = ViewBag.SoChoXuLy ?? 0;
+    var dsList = Model.ToList();
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold m-0">Quản lý báo cáo lỗi</h3>
+            <p class="text-muted small mb-0">
+                @if (soChoXuLy > 0)
+                {
+                    <span class="text-danger fw-bold">@soChoXuLy báo cáo chờ xử lý</span>
+                }
+                else
+                {
+                    <span>Tất cả báo cáo đã được xử lý</span>
+                }
+            </p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* Bộ lọc *@
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="QuanLy" class="btn @(trangThaiFilter == null ? "btn-dark" : "btn-outline-secondary") rounded-pill px-3">
+                Tất cả <span class="badge bg-secondary ms-1">@dsList.Count</span>
+            </a>
+            @foreach (var tt in new[] { ("Chờ xử lý", "danger"), ("Đang xử lý", "warning"), ("Đã sửa", "success") })
+            {
+                int count = dsList.Count(b => b.TrangThai == tt.Item1);
+                <a asp-action="QuanLy" asp-route-trangThai="@tt.Item1"
+                   class="btn @(trangThaiFilter == tt.Item1 ? $"btn-{tt.Item2}" : $"btn-outline-{tt.Item2}") rounded-pill px-3">
+                    @tt.Item1 <span class="badge bg-light text-dark ms-1">@count</span>
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (!dsList.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+            <i class="fas fa-flag fs-1 text-muted d-block mb-3"></i>
+            <p class="text-muted">Không có báo cáo nào @(trangThaiFilter != null ? $"ở trạng thái '{trangThaiFilter}'" : "")</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var bc in dsList)
+        {
+            string mau = bc.TrangThai == "Đã sửa" ? "success" : bc.TrangThai == "Đang xử lý" ? "warning" : "danger";
+            <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="row g-3 align-items-start">
+                        <div class="col-md-7">
+                            @* Tiêu đề *@
+                            <div class="d-flex gap-2 align-items-center mb-2">
+                                <span class="badge bg-@mau rounded-pill">@bc.TrangThai</span>
+                                <span class="badge bg-secondary rounded-pill">@bc.LoaiBaoCao</span>
+                                <span class="text-muted small">@bc.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+
+                            @* Thông tin đề/câu *@
+                            <div class="fw-bold mb-1">
+                                <i class="fas fa-file-alt text-primary me-1"></i>
+                                @(bc.DeThi?.TenDeThi ?? "Không rõ")
+                                @if (bc.MaCauHoi.HasValue)
+                                {
+                                    <span class="text-muted fw-normal small ms-2">— Câu #@bc.MaCauHoi</span>
+                                }
+                            </div>
+                            @if (bc.CauHoi != null)
+                            {
+                                <div class="text-muted small mb-2 text-truncate" style="max-width:500px;">
+                                    @bc.CauHoi.NoiDung
+                                </div>
+                            }
+
+                            @* Mô tả lỗi *@
+                            <div class="p-3 bg-light rounded-3 small">
+                                <strong>Mô tả:</strong> @bc.MoTa
+                            </div>
+
+                            @* Người báo cáo *@
+                            <div class="mt-2 text-muted small">
+                                <i class="fas fa-user me-1"></i>
+                                @(bc.User?.FullName ?? bc.User?.UserName ?? "Ẩn danh")
+                                <span class="ms-1">(@(bc.User?.Email ?? ""))</span>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(bc.GhiChuAdmin))
+                            {
+                                <div class="mt-2 p-2 bg-info bg-opacity-10 rounded-3 small">
+                                    <i class="fas fa-comment text-info me-1"></i>
+                                    <strong>Ghi chú Admin:</strong> @bc.GhiChuAdmin
+                                </div>
+                            }
+                        </div>
+
+                        <div class="col-md-5">
+                            @* Form cập nhật *@
+                            <form asp-action="CapNhatTrangThai" asp-controller="BaoCao" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@bc.Id" />
+
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small">Cập nhật trạng thái</label>
+                                    <select name="trangThai" class="form-select form-select-sm rounded-pill">
+                                        @foreach (var tt in new[] { "Chờ xử lý", "Đang xử lý", "Đã sửa" })
+                                        {
+                                            <option value="@tt" selected="@(bc.TrangThai == tt ? "selected" : null)">@tt</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Ghi chú phản hồi (sẽ gửi thông báo khi "Đã sửa")</label>
+                                    <textarea name="ghiChuAdmin" class="form-control form-control-sm rounded-3" rows="2"
+                                              placeholder="Ví dụ: Đã sửa đáp án từ A sang C...">@bc.GhiChuAdmin</textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-save me-1"></i>Cập nhật
+                                    </button>
+                                    <a href="/Exam/Edit/@bc.MaDeThi" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                                        <i class="fas fa-edit me-1"></i>Sửa đề
+                                    </a>
+                                    @if (bc.MaCauHoi.HasValue)
+                                    {
+                                        <a href="/Exam/ManageCauHoi/@bc.MaDeThi" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                                            <i class="fas fa-list me-1"></i>Câu hỏi
+                                        </a>
+                                    }
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

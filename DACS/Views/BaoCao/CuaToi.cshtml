@@ -1,0 +1,103 @@
+@using DACS.Models
+@model IEnumerable<BaoCaoLoi>
+@{
+    ViewData["Title"] = "Báo cáo của tôi";
+    var ds = Model.ToList();
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold m-0">Báo cáo lỗi của tôi</h3>
+            <p class="text-muted small mb-0">Theo dõi trạng thái các báo cáo bạn đã gửi</p>
+        </div>
+        <a href="/Exam/Index" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-flag me-2"></i>Báo cáo mới
+        </a>
+    </div>
+
+    @if (!ds.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+            <i class="fas fa-flag fs-1 text-muted d-block mb-3"></i>
+            <p class="text-muted">Bạn chưa gửi báo cáo nào.</p>
+            <p class="text-muted small">Khi làm bài, nếu phát hiện câu hỏi sai, hãy bấm nút <b>"Báo cáo lỗi"</b> bên dưới câu đó.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var bc in ds)
+            {
+                string mau = bc.TrangThai == "Đã sửa" ? "success" : bc.TrangThai == "Đang xử lý" ? "warning" : "danger";
+                string icon = bc.TrangThai == "Đã sửa" ? "fas fa-check-circle" :
+                              bc.TrangThai == "Đang xử lý" ? "fas fa-spinner" : "fas fa-clock";
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden
+                                @(bc.TrangThai == "Đã sửa" ? "border-start border-4 border-success" : "")">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex gap-2 align-items-center mb-2">
+                                        <span class="badge bg-@mau rounded-pill">
+                                            <i class="@icon me-1"></i>@bc.TrangThai
+                                        </span>
+                                        <span class="badge bg-light text-dark border rounded-pill">@bc.LoaiBaoCao</span>
+                                        <span class="text-muted small">@bc.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+
+                                    <div class="fw-bold mb-1">
+                                        <i class="fas fa-file-alt text-primary me-1"></i>
+                                        @(bc.DeThi?.TenDeThi ?? "Không rõ đề thi")
+                                        @if (bc.MaCauHoi.HasValue)
+                                        {
+                                            <span class="text-muted fw-normal small ms-2">— Câu hỏi cụ thể</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fw-normal small ms-2">— Cả đề thi</span>
+                                        }
+                                    </div>
+
+                                    <div class="text-muted small bg-light rounded-3 p-2 mb-2">
+                                        <strong>Mô tả của bạn:</strong> @bc.MoTa
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(bc.GhiChuAdmin))
+                                    {
+                                        <div class="p-3 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-25">
+                                            <div class="fw-bold small text-success mb-1">
+                                                <i class="fas fa-comment-dots me-1"></i>Phản hồi từ Admin:
+                                            </div>
+                                            <div class="small">@bc.GhiChuAdmin</div>
+                                            @if (bc.NgayXuLy.HasValue)
+                                            {
+                                                <div class="text-muted mt-1" style="font-size:.75rem;">
+                                                    Xử lý lúc: @bc.NgayXuLy.Value.ToString("dd/MM/yyyy HH:mm")
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else if (bc.TrangThai == "Chờ xử lý")
+                                    {
+                                        <div class="text-muted small fst-italic">
+                                            <i class="fas fa-hourglass-half me-1"></i>
+                                            Admin đang xem xét báo cáo của bạn. Bạn sẽ nhận thông báo khi được xử lý.
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (bc.TrangThai == "Đã sửa")
+                                {
+                                    <a href="/Exam/Practice/@bc.MaDeThi" class="btn btn-success btn-sm rounded-pill px-3 ms-3">
+                                        <i class="fas fa-play me-1"></i>Luyện tập lại
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

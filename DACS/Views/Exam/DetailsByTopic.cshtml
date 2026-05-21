@@ -1,0 +1,31 @@
+﻿@model IEnumerable<DACS.Models.DeThi>
+
+@{
+    ViewData["Title"] = "Đề thi theo chủ đề";
+    var topicName = ViewBag.TopicName ?? "Chủ đề";
+}
+
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">Các đề thi thuộc: <span class="text-primary">@topicName</span></h2>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100 p-3">
+                        <h5 class="card-title fw-bold">@item.TenDeThi</h5>
+                        <p class="text-muted">Thời gian: @item.ThoiGian phút</p>
+                        <a asp-action="Details" asp-route-id="@item.MaDeThi" class="btn btn-primary mt-auto">Làm bài</a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">Chưa có đề thi nào cho chủ đề này.</div>
+    }
+    <a asp-controller="AI" asp-action="Roadmap" class="btn btn-secondary">Quay lại lộ trình</a>
+</div>

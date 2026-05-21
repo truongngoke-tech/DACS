@@ -1,0 +1,226 @@
+@using DACS.Models
+@using System.Collections.Generic
+@model KetQuaThi
+@{
+    ViewData["Title"] = "Kết quả bài thi";
+    var chiTiet = ViewBag.ChiTiet as List<System.Text.Json.JsonElement> ?? new();
+    var topList = ViewBag.TopList as List<KeyValuePair<string, float>> ?? new();
+    int tongCau = chiTiet.Count;
+    int cauDung = Model.SoCauDung;
+    int cauSai  = tongCau - cauDung;
+}
+
+<div class="container-fluid px-4">
+
+    <div class="row g-4 mb-4">
+        @* CỘT TRÁI: Điểm số *@
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="p-4 text-white text-center"
+                     style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);">
+                    <h5 class="fw-bold mb-1">@(Model.DeThi?.TenDeThi ?? "Kết quả bài thi")</h5>
+                    <div class="small opacity-75">@Model.NgayThi.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                <div class="card-body text-center py-4">
+                    @{
+                        string mauDiem = Model.TongDiem >= 8 ? "success" : Model.TongDiem >= 5 ? "primary" : "danger";
+                        string nhanXet = Model.TongDiem >= 8 ? "Xuất sắc! 🎉" : Model.TongDiem >= 5 ? "Đạt yêu cầu ✓" : "Cần cố gắng thêm 💪";
+                    }
+                    <div class="display-1 fw-bold text-@mauDiem mb-1">@Model.TongDiem</div>
+                    <div class="text-muted mb-3">/ 10 điểm — @nhanXet</div>
+
+                    <div class="progress mb-4" style="height:14px;border-radius:8px;">
+                        <div class="progress-bar bg-@mauDiem progress-bar-striped"
+                             style="width:@((Model.TongDiem * 10).ToString("F0", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="card border-0 bg-light rounded-3 p-3">
+                                <div class="fw-bold fs-4 text-success">@cauDung</div>
+                                <div class="text-muted small">Câu đúng</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card border-0 bg-light rounded-3 p-3">
+                                <div class="fw-bold fs-4 text-danger">@cauSai</div>
+                                <div class="text-muted small">Câu sai</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card border-0 bg-light rounded-3 p-3">
+                                <div class="fw-bold fs-4 text-muted">@tongCau</div>
+                                <div class="text-muted small">Tổng câu</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <a href="/Exam/Details/@Model.MaDeThi" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-redo me-2"></i>Làm lại
+                        </a>
+                        <a href="/Exam/History" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="fas fa-history me-2"></i>Nhật ký
+                        </a>
+                        <a href="/Exam/Index" class="btn btn-outline-primary rounded-pill px-4">
+                            <i class="fas fa-home me-2"></i>Trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* CỘT PHẢI: Bảng xếp hạng *@
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-warning border-0 py-3 text-center">
+                    <h5 class="fw-bold m-0 text-dark">
+                        <i class="fas fa-trophy text-danger me-2"></i>Top 5 — đề này
+                    </h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width:60px">Hạng</th>
+                                <th>Thí sinh</th>
+                                <th class="text-center">Điểm</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (topList.Any())
+                            {
+                                int rank = 1;
+                                foreach (var item in topList)
+                                {
+                                    string huy = rank == 1 ? "🥇" : rank == 2 ? "🥈" : rank == 3 ? "🥉" : "#" + rank;
+                                    string rowCls = rank == 1 ? "table-warning" : "";
+                                    <tr class="@rowCls">
+                                        <td class="text-center fw-bold fs-5">@huy</td>
+                                        <td class="@(item.Key == "Ẩn danh" ? "text-muted fst-italic" : "fw-bold")">
+                                            @item.Key
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary rounded-pill fs-6 px-3">@item.Value</span>
+                                        </td>
+                                    </tr>
+                                    rank++;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        Chưa có dữ liệu xếp hạng
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* REVIEW ĐÁP ÁN CHI TIẾT *@
+    @if (chiTiet.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold m-0">
+                    <i class="fas fa-list-check me-2 text-primary"></i>Xem lại đáp án
+                </h5>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-success rounded-pill px-3">✓ @cauDung đúng</span>
+                    <span class="badge bg-danger rounded-pill px-3">✗ @cauSai sai</span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                @{
+                    int stt = 1;
+                    foreach (var cau in chiTiet)
+                    {
+                        bool laDung = false;
+                        string noiDung = "", dapAnChon = "", dapAnDung = "";
+                        string pA = "", pB = "", pC = "", pD = "";
+
+                        try {
+                            if (cau.TryGetProperty("LaDung", out var ld))
+                                laDung = ld.ValueKind == System.Text.Json.JsonValueKind.True ||
+                                         (ld.ValueKind == System.Text.Json.JsonValueKind.String &&
+                                          ld.GetString()?.Equals("True", StringComparison.OrdinalIgnoreCase) == true);
+                            if (cau.TryGetProperty("NoiDung", out var nd)) noiDung = nd.GetString() ?? "";
+                            if (cau.TryGetProperty("DapAnChon", out var dc)) dapAnChon = dc.GetString() ?? "";
+                            if (cau.TryGetProperty("DapAnDung", out var dd)) dapAnDung = dd.GetString() ?? "";
+                            if (cau.TryGetProperty("PhuongAnA", out var a)) pA = a.GetString() ?? "";
+                            if (cau.TryGetProperty("PhuongAnB", out var b)) pB = b.GetString() ?? "";
+                            if (cau.TryGetProperty("PhuongAnC", out var c)) pC = c.GetString() ?? "";
+                            if (cau.TryGetProperty("PhuongAnD", out var d)) pD = d.GetString() ?? "";
+                        } catch { }
+
+                        var opts = new[] { ("A", pA), ("B", pB), ("C", pC), ("D", pD) };
+
+                        <div class="mb-4 p-3 rounded-3 @(laDung ? "bg-success bg-opacity-10 border border-success border-opacity-25" : "bg-danger bg-opacity-10 border border-danger border-opacity-25")">
+                            <div class="d-flex gap-2 mb-2">
+                                <span class="badge @(laDung ? "bg-success" : "bg-danger") rounded-pill">Câu @stt</span>
+                                @if (laDung)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                        <i class="fas fa-check me-1"></i>Đúng
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                                        <i class="fas fa-times me-1"></i>Sai
+                                    </span>
+                                }
+                            </div>
+                            <p class="fw-bold mb-3">@noiDung</p>
+
+                            <div class="row g-2">
+                                @foreach (var opt in opts)
+                                {
+                                    if (!string.IsNullOrEmpty(opt.Item2))
+                                    {
+                                        bool isCorrect = opt.Item1 == dapAnDung;
+                                        bool isChosen  = opt.Item1 == dapAnChon;
+                                        bool isWrong   = isChosen && !isCorrect;
+
+                                        string cls = isCorrect ? "bg-success bg-opacity-10 border-success text-success" :
+                                                     isWrong   ? "bg-danger bg-opacity-10 border-danger text-danger" :
+                                                                 "bg-white border-secondary text-muted";
+                                        string badgeCls = isCorrect ? "bg-success" : isWrong ? "bg-danger" : "bg-secondary";
+
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center gap-2 p-2 border rounded-3 @cls">
+                                                <span class="badge @badgeCls flex-shrink-0">@opt.Item1</span>
+                                                <span class="small">@opt.Item2</span>
+                                                @if (isCorrect) { <i class="fas fa-check ms-auto text-success"></i> }
+                                                @if (isWrong)   { <i class="fas fa-times ms-auto text-danger"></i> }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                            @if (!laDung && !string.IsNullOrEmpty(dapAnChon))
+                            {
+                                <div class="mt-2 small text-muted">
+                                    Bạn chọn: <span class="badge bg-danger">@dapAnChon</span>
+                                    &nbsp;→&nbsp;
+                                    Đáp án đúng: <span class="badge bg-success">@dapAnDung</span>
+                                </div>
+                            }
+                            else if (string.IsNullOrEmpty(dapAnChon))
+                            {
+                                <div class="mt-2 small text-muted fst-italic">Bạn đã bỏ qua câu này</div>
+                            }
+                        </div>
+                        stt++;
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>

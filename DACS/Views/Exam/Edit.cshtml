@@ -1,0 +1,74 @@
+@model DACS.Models.DeThi
+
+@{
+    ViewData["Title"] = "Chỉnh sửa đề thi";
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
+                    <h4 class="fw-bold m-0 text-primary"><i class="fas fa-edit me-2"></i>Chỉnh sửa đề thi</h4>
+                    <a asp-action="ManageCauHoi" asp-route-id="@Model.MaDeThi" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                        <i class="fas fa-list-ul me-1"></i> Quản lý câu hỏi
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="MaDeThi" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên đề thi</label>
+                            <input asp-for="TenDeThi" class="form-control rounded-pill px-3" placeholder="Nhập tên đề thi..." />
+                            <span asp-validation-for="TenDeThi" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Thời gian (phút)</label>
+                                <input asp-for="ThoiGian" type="number" class="form-control rounded-pill px-3" min="1" />
+                                <span asp-validation-for="ThoiGian" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Số câu hỏi mỗi lần thi</label>
+                                <input asp-for="SoCauHoi" type="number" class="form-control rounded-pill px-3" min="1" />
+                                <span asp-validation-for="SoCauHoi" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Chủ đề</label>
+                                <select asp-for="MaChuDe" class="form-select rounded-pill px-3" asp-items="ViewBag.MaChuDe"></select>
+                                <span asp-validation-for="MaChuDe" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Độ khó</label>
+                                <select asp-for="MucDoKho" class="form-select rounded-pill px-3" asp-items="ViewBag.DanhSachMucDo">
+                                    <option value="">-- Chọn độ khó --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm w-100">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 w-100">
+                                Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

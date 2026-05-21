@@ -1,0 +1,145 @@
+@model IEnumerable<DACS.Models.CauHoi>
+
+@{
+    ViewData["Title"] = "Quản lý câu hỏi";
+    var deThi = ViewBag.DeThi as DACS.Models.DeThi;
+}
+
+<div class="container-fluid px-4 py-3">
+    @*Header*@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index">Đề thi</a></li>
+                    <li class="breadcrumb-item active">Quản lý câu hỏi</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold m-0">@deThi?.TenDeThi</h3>
+            <div class="text-muted small mt-1">
+                <i class="fas fa-clock me-1"></i>@(deThi?.ThoiGian ?? 60) phút &nbsp;|&nbsp;
+                <i class="fas fa-question-circle me-1"></i>@Model.Count() câu hỏi hiện có &nbsp;|&nbsp;
+                @if (!string.IsNullOrEmpty(deThi?.MucDoKho))
+                {
+                    var c = deThi.MucDoKho == "Dễ" ? "success" : (deThi.MucDoKho == "Khó" ? "danger" : "warning");
+                    <span class="badge bg-@c-subtle text-@c border border-@c-subtle rounded-pill px-2">@deThi.MucDoKho</span>
+                }
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="AddCauHoi" asp-route-maDeThi="@deThi?.MaDeThi" class="btn btn-success rounded-pill px-4 shadow-sm">
+                <i class="fas fa-plus me-2"></i>Thêm câu hỏi
+            </a>
+            <a asp-action="Edit" asp-route-id="@deThi?.MaDeThi" class="btn btn-outline-warning rounded-pill px-3">
+                <i class="fas fa-cog"></i>
+            </a>
+        </div>
+    </div>
+
+   
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light">
+        <h6 class="fw-bold text-success mb-3"><i class="fas fa-file-excel me-2"></i>Import câu hỏi từ Excel</h6>
+        <p class="text-muted small mb-2">
+            <i class="fas fa-info-circle me-1 text-info"></i>
+            Định dạng: <b>Nội dung | Đáp án A | B | C | D | Đáp án đúng (A/B/C/D) | Độ khó</b> (dòng 2 trở đi)
+        </p>
+        <form asp-action="ImportExcel" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="maDeThi" value="@deThi?.MaDeThi" />
+            <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required style="max-width:320px;" />
+            <button type="submit" class="btn btn-success rounded-pill px-4 text-nowrap">
+                <i class="fas fa-upload me-1"></i>Import
+            </button>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="fas fa-list-ul fs-1 d-block mb-3"></i>
+                <p>Chưa có câu hỏi nào. Hãy thêm câu hỏi hoặc import từ Excel.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:45px">#</th>
+                            <th>Nội dung câu hỏi</th>
+                            <th class="text-center" style="width:80px">Đ/A đúng</th>
+                            <th class="text-center" style="width:110px">Độ khó</th>
+                            <th class="text-center" style="width:90px">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int stt = 1;
+                        }
+                        @foreach (var cau in Model)
+                        {
+                            var mauMuc = cau.MucDoKho == "Dễ" ? "success" : (cau.MucDoKho == "Khó" ? "danger" : "warning");
+                            <tr>
+                                <td class="text-muted fw-bold">@stt</td>
+                                <td>
+                                    <div class="fw-medium text-break" style="max-width:500px;">@cau.NoiDung</div>
+                                    <div class="small text-muted mt-1">
+                                        <span class="me-2">A: @(cau.PhuongAnA ?? "—")</span>
+                                        <span class="me-2">B: @(cau.PhuongAnB ?? "—")</span>
+                                        <span class="me-2">C: @(cau.PhuongAnC ?? "—")</span>
+                                        <span>D: @(cau.PhuongAnD ?? "—")</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success fs-6 px-3">@(cau.DapAnDung ?? "?")</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(cau.MucDoKho))
+                                    {
+                                        <span class="badge bg-@mauMuc-subtle text-@mauMuc border border-@mauMuc-subtle rounded-pill px-2">@cau.MucDoKho</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">—</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <form asp-action="DeleteCauHoi" method="post"
+                                          onsubmit="return confirm('Xóa câu hỏi này?');" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@cau.MaCauHoi" />
+                                        <input type="hidden" name="maDeThi" value="@deThi?.MaDeThi" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="text-muted small mt-2 text-end">Tổng cộng: @Model.Count() câu hỏi</div>
+    }
+</div>

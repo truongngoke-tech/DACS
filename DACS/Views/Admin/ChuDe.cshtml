@@ -1,0 +1,646 @@
+@model IEnumerable<ChuDe>
+
+@{
+    ViewData["Title"] = "Quản lý chủ đề";
+
+    var soDeTheoCD = ViewBag.SoDeTheoCD as Dictionary<int, int>
+                     ?? new Dictionary<int, int>();
+
+    int tongChuDe = Model.Count();
+    int tongDe = soDeTheoCD.Values.Sum();
+}
+
+<style>
+    .topic-vip {
+        position: relative;
+        padding-bottom: 36px;
+    }
+
+        .topic-vip::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 14% 8%, rgba(99,102,241,.23), transparent 28%), radial-gradient(circle at 88% 12%, rgba(34,211,238,.20), transparent 30%), radial-gradient(circle at 48% 100%, rgba(236,72,153,.13), transparent 35%);
+            z-index: -1;
+        }
+
+    .topic-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 36px;
+        padding: 38px;
+        color: white;
+        background: linear-gradient(135deg, rgba(15,23,42,.96), rgba(30,41,59,.93)), radial-gradient(circle at 20% 20%, rgba(99,102,241,.9), transparent 34%), radial-gradient(circle at 86% 25%, rgba(34,211,238,.68), transparent 36%), radial-gradient(circle at 55% 95%, rgba(236,72,153,.45), transparent 38%);
+        box-shadow: 0 34px 90px rgba(15,23,42,.26);
+        border: 1px solid rgba(255,255,255,.15);
+    }
+
+        .topic-hero::after {
+            content: "🏷️";
+            position: absolute;
+            right: 42px;
+            bottom: -36px;
+            font-size: 170px;
+            opacity: .13;
+        }
+
+    .hero-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 9px 15px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.13);
+        border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(14px);
+        color: #e0f2fe;
+        font-size: .82rem;
+        font-weight: 850;
+    }
+
+    .hero-title {
+        margin: 18px 0 10px;
+        font-size: clamp(2rem, 4vw, 4rem);
+        font-weight: 950;
+        line-height: .95;
+        letter-spacing: -2px;
+    }
+
+        .hero-title span {
+            background: linear-gradient(90deg, #a5f3fc, #c4b5fd, #f9a8d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .hero-desc {
+        max-width: 660px;
+        color: #cbd5e1;
+        font-size: 1.02rem;
+        margin: 0;
+    }
+
+    .hero-actions {
+        margin-top: 24px;
+    }
+
+    .hero-btn {
+        border: 0;
+        border-radius: 999px;
+        padding: 13px 22px;
+        color: white;
+        font-weight: 900;
+        background: linear-gradient(135deg,#4f46e5,#06b6d4);
+        box-shadow: 0 16px 32px rgba(79,70,229,.25);
+        transition: .22s;
+    }
+
+        .hero-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+        }
+
+    .hero-stat {
+        min-width: 220px;
+        border-radius: 30px;
+        padding: 26px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(16px);
+        text-align: center;
+    }
+
+        .hero-stat .num {
+            font-size: 3rem;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+    .stats-grid {
+        margin-top: -52px;
+        position: relative;
+        z-index: 5;
+    }
+
+    .stat-vip {
+        border-radius: 28px;
+        background: rgba(255,255,255,.9);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.10);
+        padding: 24px;
+        height: 100%;
+        transition: .22s;
+    }
+
+        .stat-vip:hover {
+            transform: translateY(-8px);
+        }
+
+    .stat-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 24px;
+        background: var(--grad);
+        box-shadow: 0 15px 30px var(--shadow);
+        margin-bottom: 15px;
+    }
+
+    .stat-num {
+        font-size: 2.2rem;
+        font-weight: 950;
+        color: #0f172a;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: .88rem;
+        font-weight: 700;
+    }
+
+    .panel-vip {
+        margin-top: 28px;
+        border-radius: 32px;
+        overflow: hidden;
+        background: rgba(255,255,255,.9);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.09);
+    }
+
+    .toolbar-vip {
+        padding: 22px 24px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+        .search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .search-box input {
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 13px 18px 13px 46px;
+            font-weight: 750;
+            background: #f8fafc;
+        }
+
+            .search-box input:focus {
+                border-color: #6366f1;
+                box-shadow: 0 0 0 .25rem rgba(99,102,241,.15);
+            }
+
+    .topic-table {
+        margin: 0;
+    }
+
+        .topic-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 950;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 18px 22px;
+        }
+
+        .topic-table tbody td {
+            padding: 18px 22px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+    .topic-row {
+        transition: .2s;
+    }
+
+        .topic-row:hover {
+            background: #f8fafc;
+        }
+
+    .topic-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 18px;
+        background: linear-gradient(135deg,#4f46e5,#06b6d4);
+        box-shadow: 0 14px 26px rgba(79,70,229,.22);
+    }
+
+    .topic-name {
+        font-weight: 950;
+        color: #0f172a;
+    }
+
+    .topic-parent {
+        color: #64748b;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: .78rem;
+        font-weight: 900;
+    }
+
+    .delete-btn {
+        border-radius: 999px;
+        padding: 9px 15px;
+        font-weight: 850;
+    }
+
+    .modal-content {
+        border-radius: 32px;
+        border: 0;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg,#4f46e5,#06b6d4);
+        color: white;
+        padding: 22px 26px;
+    }
+
+    .modal-body {
+        padding: 28px;
+    }
+
+    .vip-input,
+    .vip-select {
+        border-radius: 999px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        padding: 13px 18px;
+        font-weight: 700;
+    }
+
+        .vip-input:focus,
+        .vip-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 .25rem rgba(99,102,241,.15);
+        }
+
+    @@media (max-width: 992px) {
+        .hero-inner {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .hero-stat {
+            width: 100%;
+        }
+
+        .stats-grid {
+            margin-top: 22px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .topic-hero {
+            padding: 26px;
+        }
+    }
+</style>
+
+<div class="topic-vip">
+
+    <section class="topic-hero animate__animated animate__fadeIn">
+        <div class="hero-inner">
+            <div>
+                <div class="hero-badge">
+                    <i class="fas fa-layer-group text-info"></i>
+                    EDUTECH AI Topic Manager
+                </div>
+
+                <h1 class="hero-title">
+                    Quản lý <span>chủ đề</span>
+                </h1>
+
+                <p class="hero-desc">
+                    Tạo và quản lý hệ thống chủ đề giúp tổ chức đề thi, câu hỏi và lộ trình học tập thông minh.
+                </p>
+
+                <div class="hero-actions">
+                    <button class="btn hero-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#themChuDeModal">
+                        <i class="fas fa-plus me-2"></i>Thêm chủ đề mới
+                    </button>
+                </div>
+            </div>
+
+            <div class="hero-stat">
+                <div class="num">@tongChuDe</div>
+                <div class="small fw-bold text-white-50 mt-2">
+                    Chủ đề hiện có
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4 stats-grid">
+        <div class="col-md-6">
+            <div class="stat-vip">
+                <div class="stat-icon"
+                     style="--grad:linear-gradient(135deg,#4f46e5,#06b6d4);--shadow:rgba(79,70,229,.28);">
+                    <i class="fas fa-tags"></i>
+                </div>
+
+                <div class="stat-num">@tongChuDe</div>
+                <div class="stat-label">Tổng số chủ đề</div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="stat-vip">
+                <div class="stat-icon"
+                     style="--grad:linear-gradient(135deg,#16a34a,#22c55e);--shadow:rgba(34,197,94,.28);">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+
+                <div class="stat-num">@tongDe</div>
+                <div class="stat-label">Đề thi liên kết</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-vip">
+
+        <div class="toolbar-vip">
+            <div class="search-box">
+                <i class="fas fa-magnifying-glass"></i>
+
+                <input type="text"
+                       id="searchTopic"
+                       class="form-control"
+                       placeholder="Tìm kiếm chủ đề..." />
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table topic-table align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Chủ đề</th>
+                        <th>Chủ đề cha</th>
+                        <th class="text-center">Số đề</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-folder-open fs-1 d-block mb-3"></i>
+                                Chưa có chủ đề nào
+                            </td>
+                        </tr>
+                    }
+
+                    @{
+                        int stt = 1;
+                    }
+
+                    @foreach (var cd in Model)
+                    {
+                        int soDe =
+                            soDeTheoCD.ContainsKey(cd.MaChuDe)
+                            ? soDeTheoCD[cd.MaChuDe]
+                            : 0;
+
+                        bool laChuDeGoc = cd.ChuDeCha == null;
+
+                        <tr class="topic-row">
+
+                            <td class="fw-bold text-muted">
+                                @stt
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+
+                                    <div class="topic-icon">
+                                        <i class="fas fa-tag"></i>
+                                    </div>
+
+                                    <div>
+                                        <div class="topic-name searchable-topic">
+                                            @cd.TenChuDe
+                                        </div>
+
+                                        <div class="topic-parent">
+                                            ID: @cd.MaChuDe
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (laChuDeGoc)
+                                {
+                                    <span class="text-muted fst-italic">
+                                        Chủ đề gốc
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold text-secondary">
+                                        @(cd.ChuDeCha?.TenChuDe)
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-center">
+
+                                @if (soDe > 0)
+                                {
+                                    <span class="count-badge bg-info-subtle text-info">
+                                        <i class="fas fa-file-alt"></i>
+                                        @soDe đề
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <form asp-action="XoaChuDe"
+                                      asp-controller="Admin"
+                                      method="post"
+                                      onsubmit="return confirm('Xóa chủ đề \'@cd.TenChuDe\'?');">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@cd.MaChuDe" />
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger delete-btn"
+                                        @(soDe > 0 ? "disabled" : "")>
+
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        stt++;
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="themChuDeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Thêm chủ đề mới
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <form asp-action="ThemChuDe"
+                  asp-controller="Admin"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Tên chủ đề
+                        </label>
+
+                        <input type="text"
+                               name="tenChuDe"
+                               class="form-control vip-input"
+                               placeholder="VD: ASP.NET Core, AI, CSDL..."
+                               required />
+
+                    </div>
+
+                    <div>
+
+                        <label class="form-label fw-bold">
+                            Chủ đề cha
+                        </label>
+
+                        <select name="maChuDeCha"
+                                class="form-select vip-select">
+
+                            <option value="0">
+                                — Không có —
+                            </option>
+
+                            @foreach (var cd in Model.Where(c => c.MaChuDeCha == null))
+                            {
+                                <option value="@cd.MaChuDe">
+                                    @cd.TenChuDe
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0 px-4 pb-4">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+
+                    <button type="submit"
+                            class="btn hero-btn">
+                        <i class="fas fa-plus me-2"></i>
+                        Thêm chủ đề
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        document.getElementById('searchTopic')?.addEventListener('input', function () {
+
+            const kw = this.value.toLowerCase().trim();
+
+            document.querySelectorAll('.topic-row').forEach(row => {
+
+                const name =
+                    row.querySelector('.searchable-topic')
+                    ?.textContent
+                    .toLowerCase() || '';
+
+                row.style.display =
+                    name.includes(kw)
+                    ? ''
+                    : 'none';
+            });
+
+        });
+    </script>
+
+}

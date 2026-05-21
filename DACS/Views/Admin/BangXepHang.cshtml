@@ -1,0 +1,662 @@
+@{
+    ViewData["Title"] = "Bảng xếp hạng";
+
+    var bangXepHang = ViewBag.BangXepHang as IEnumerable<dynamic> ?? new List<dynamic>();
+    var danhSach = bangXepHang.ToList();
+
+    int totalUsers = danhSach.Count;
+    double diemCaoNhat = danhSach.Any() ? danhSach.Max(x => (double)x.DiemCao) : 0;
+    double diemTBTop = danhSach.Any() ? danhSach.Max(x => (double)x.DiemTB) : 0;
+}
+
+<style>
+    .rank-vip {
+        position: relative;
+        padding-bottom: 36px;
+    }
+
+        .rank-vip::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 14% 8%, rgba(99,102,241,.23), transparent 28%), radial-gradient(circle at 88% 12%, rgba(34,211,238,.20), transparent 30%), radial-gradient(circle at 48% 100%, rgba(236,72,153,.13), transparent 35%);
+            z-index: -1;
+        }
+
+    .rank-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 36px;
+        padding: 38px;
+        color: white;
+        background: linear-gradient(135deg, rgba(15,23,42,.96), rgba(30,41,59,.93)), radial-gradient(circle at 20% 20%, rgba(245,158,11,.75), transparent 34%), radial-gradient(circle at 86% 25%, rgba(99,102,241,.7), transparent 36%), radial-gradient(circle at 55% 95%, rgba(236,72,153,.45), transparent 38%);
+        box-shadow: 0 34px 90px rgba(15,23,42,.26);
+        border: 1px solid rgba(255,255,255,.15);
+    }
+
+        .rank-hero::after {
+            content: "🏆";
+            position: absolute;
+            right: 42px;
+            bottom: -36px;
+            font-size: 170px;
+            opacity: .14;
+        }
+
+    .hero-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 9px 15px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.13);
+        border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(14px);
+        color: #e0f2fe;
+        font-size: .82rem;
+        font-weight: 850;
+    }
+
+    .hero-title {
+        margin: 18px 0 10px;
+        font-size: clamp(2rem, 4vw, 4rem);
+        font-weight: 950;
+        line-height: .95;
+        letter-spacing: -2px;
+    }
+
+        .hero-title span {
+            background: linear-gradient(90deg, #fde68a, #f9a8d4, #a5f3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .hero-desc {
+        max-width: 690px;
+        color: #cbd5e1;
+        font-size: 1.02rem;
+        margin: 0;
+    }
+
+    .hero-stat {
+        min-width: 210px;
+        border-radius: 30px;
+        padding: 28px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.18);
+        backdrop-filter: blur(16px);
+        text-align: center;
+    }
+
+        .hero-stat .num {
+            font-size: 3rem;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+    .stats-grid {
+        margin-top: -52px;
+        position: relative;
+        z-index: 5;
+    }
+
+    .stat-vip {
+        border-radius: 28px;
+        background: rgba(255,255,255,.9);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.10);
+        padding: 24px;
+        height: 100%;
+        transition: .22s;
+    }
+
+        .stat-vip:hover {
+            transform: translateY(-8px);
+        }
+
+    .stat-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 24px;
+        background: var(--grad);
+        box-shadow: 0 15px 30px var(--shadow);
+        margin-bottom: 15px;
+    }
+
+    .stat-num {
+        font-size: 2.2rem;
+        font-weight: 950;
+        color: #0f172a;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: .88rem;
+        font-weight: 700;
+    }
+
+    .podium-wrap {
+        margin-top: 30px;
+    }
+
+    .podium-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 34px;
+        padding: 30px 24px;
+        text-align: center;
+        height: 100%;
+        background: rgba(255,255,255,.9);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.10);
+        transition: .25s;
+    }
+
+        .podium-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 34px 85px rgba(15,23,42,.16);
+        }
+
+        .podium-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            height: 8px;
+            background: var(--medalGrad);
+        }
+
+    .podium-medal {
+        font-size: 4rem;
+        line-height: 1;
+        margin-bottom: 14px;
+        filter: drop-shadow(0 12px 16px rgba(15,23,42,.18));
+    }
+
+    .podium-rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
+        height: 36px;
+        border-radius: 999px;
+        color: white;
+        font-weight: 950;
+        background: var(--medalGrad);
+        box-shadow: 0 12px 24px var(--medalShadow);
+        margin-bottom: 12px;
+    }
+
+    .podium-name {
+        font-size: 1.18rem;
+        font-weight: 950;
+        color: #0f172a;
+    }
+
+    .podium-email {
+        color: #64748b;
+        font-size: .82rem;
+        font-weight: 650;
+        min-height: 36px;
+    }
+
+    .podium-score {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 9px 16px;
+        color: white;
+        font-size: 1rem;
+        font-weight: 950;
+        background: var(--medalGrad);
+        box-shadow: 0 12px 24px var(--medalShadow);
+        margin: 12px 0 8px;
+    }
+
+    .ranking-panel {
+        margin-top: 28px;
+        border-radius: 32px;
+        overflow: hidden;
+        background: rgba(255,255,255,.9);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.09);
+    }
+
+    .panel-head {
+        padding: 24px 26px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .panel-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.25rem;
+        font-weight: 950;
+    }
+
+    .search-box {
+        position: relative;
+        min-width: 280px;
+    }
+
+        .search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .search-box input {
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 12px 18px 12px 46px;
+            font-weight: 750;
+            background: #f8fafc;
+        }
+
+            .search-box input:focus {
+                border-color: #6366f1;
+                box-shadow: 0 0 0 .25rem rgba(99,102,241,.15);
+            }
+
+    .rank-table {
+        margin: 0;
+    }
+
+        .rank-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 950;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 18px 22px;
+        }
+
+        .rank-table tbody td {
+            padding: 18px 22px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+    .rank-row {
+        transition: .2s;
+    }
+
+        .rank-row:hover {
+            background: #f8fafc;
+        }
+
+    .rank-number {
+        width: 46px;
+        height: 46px;
+        border-radius: 18px;
+        display: inline-grid;
+        place-items: center;
+        font-weight: 950;
+        color: white;
+        background: var(--rankGrad);
+        box-shadow: 0 12px 24px var(--rankShadow);
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 950;
+        background: linear-gradient(135deg,#4f46e5,#06b6d4);
+        box-shadow: 0 14px 26px rgba(79,70,229,.22);
+        flex-shrink: 0;
+    }
+
+    .user-name {
+        font-weight: 950;
+        color: #0f172a;
+    }
+
+    .user-email {
+        color: #64748b;
+        font-size: .82rem;
+        font-weight: 650;
+    }
+
+    .score-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 8px 14px;
+        min-width: 72px;
+        color: white;
+        font-weight: 950;
+        background: var(--scoreGrad);
+        box-shadow: 0 12px 24px var(--scoreShadow);
+    }
+
+    .work-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        color: #475569;
+        background: #f1f5f9;
+        font-weight: 850;
+        font-size: .82rem;
+    }
+
+    .empty-state-vip {
+        margin-top: 28px;
+        border-radius: 34px;
+        padding: 58px 24px;
+        text-align: center;
+        background: rgba(255,255,255,.9);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.75);
+        box-shadow: 0 22px 55px rgba(15,23,42,.08);
+    }
+
+    .empty-icon {
+        width: 92px;
+        height: 92px;
+        margin: 0 auto 18px;
+        border-radius: 32px;
+        display: grid;
+        place-items: center;
+        font-size: 42px;
+        color: white;
+        background: linear-gradient(135deg, #f59e0b, #ec4899);
+        box-shadow: 0 18px 36px rgba(236,72,153,.24);
+    }
+
+    @@media (max-width: 992px) {
+        .hero-inner,
+        .panel-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .hero-stat,
+        .search-box {
+            width: 100%;
+        }
+
+        .stats-grid {
+            margin-top: 22px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .rank-hero {
+            padding: 26px;
+        }
+
+        .podium-card {
+            padding: 26px 20px;
+        }
+    }
+</style>
+
+<div class="rank-vip">
+    <section class="rank-hero animate__animated animate__fadeIn">
+        <div class="hero-inner">
+            <div>
+                <div class="hero-badge">
+                    <i class="fas fa-trophy text-warning"></i>
+                    EDUTECH AI Leaderboard
+                </div>
+
+                <h1 class="hero-title">
+                    Bảng <span>xếp hạng</span>
+                </h1>
+
+                <p class="hero-desc">
+                    Vinh danh những người học xuất sắc dựa trên điểm trung bình, điểm cao nhất và số bài đã hoàn thành.
+                </p>
+            </div>
+
+            <div class="hero-stat">
+                <div class="num">@totalUsers</div>
+                <div class="small fw-bold text-white-50 mt-2">Người đã thi</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4 stats-grid">
+        <div class="col-md-4">
+            <div class="stat-vip">
+                <div class="stat-icon"
+                     style="--grad:linear-gradient(135deg,#f59e0b,#f97316);--shadow:rgba(249,115,22,.28);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-num">@totalUsers</div>
+                <div class="stat-label">Người tham gia</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-vip">
+                <div class="stat-icon"
+                     style="--grad:linear-gradient(135deg,#4f46e5,#06b6d4);--shadow:rgba(79,70,229,.28);">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-num">@diemTBTop.ToString("F1")</div>
+                <div class="stat-label">Điểm TB cao nhất</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-vip">
+                <div class="stat-icon"
+                     style="--grad:linear-gradient(135deg,#16a34a,#22c55e);--shadow:rgba(34,197,94,.28);">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="stat-num">@diemCaoNhat.ToString("F1")</div>
+                <div class="stat-label">Điểm cao nhất</div>
+            </div>
+        </div>
+    </div>
+
+    @if (!danhSach.Any())
+    {
+        <div class="empty-state-vip">
+            <div class="empty-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+
+            <h4 class="fw-black text-dark">Chưa có người dùng nào làm bài thi</h4>
+            <p class="text-muted mb-0">Khi có dữ liệu làm bài, bảng xếp hạng sẽ tự động hiển thị.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 podium-wrap justify-content-center">
+            @{
+                var medals = new[]
+                {
+                    new { Icon = "🥇", Name = "Hạng 1", Grad = "linear-gradient(135deg,#f59e0b,#f97316)", Shadow = "rgba(249,115,22,.28)" },
+                    new { Icon = "🥈", Name = "Hạng 2", Grad = "linear-gradient(135deg,#64748b,#94a3b8)", Shadow = "rgba(100,116,139,.28)" },
+                    new { Icon = "🥉", Name = "Hạng 3", Grad = "linear-gradient(135deg,#dc2626,#f97316)", Shadow = "rgba(239,68,68,.28)" }
+                };
+            }
+
+            @for (int i = 0; i < Math.Min(3, danhSach.Count); i++)
+            {
+                var u = danhSach[i];
+                var m = medals[i];
+
+                <div class="col-md-4">
+                    <div class="podium-card"
+                         style="--medalGrad:@m.Grad;--medalShadow:@m.Shadow;">
+                        <div class="podium-medal">@m.Icon</div>
+
+                        <div class="podium-rank">@m.Name</div>
+
+                        <div class="podium-name">@u.TenHienThi</div>
+                        <div class="podium-email">@u.Email</div>
+
+                        <div class="podium-score">@u.DiemTB đ</div>
+
+                        <div class="text-muted fw-bold small">
+                            <i class="fas fa-clipboard-check me-1"></i>
+                            @u.SoBai bài đã làm
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="ranking-panel">
+            <div class="panel-head">
+                <div>
+                    <h5 class="panel-title">
+                        <i class="fas fa-ranking-star me-2 text-warning"></i>
+                        Bảng xếp hạng đầy đủ
+                    </h5>
+                    <div class="text-muted small fw-semibold mt-1">
+                        Sắp xếp theo điểm trung bình và số bài đã làm
+                    </div>
+                </div>
+
+                <div class="search-box">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text"
+                           id="searchRank"
+                           class="form-control"
+                           placeholder="Tìm người dùng..." />
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rank-table align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Hạng</th>
+                            <th>Người dùng</th>
+                            <th class="text-center">Số bài</th>
+                            <th class="text-center">Điểm TB</th>
+                            <th class="text-center">Điểm cao nhất</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @{
+                            int rank = 1;
+                        }
+
+                        @foreach (var u in danhSach)
+                        {
+                            string rankGrad = rank == 1
+                                ? "linear-gradient(135deg,#f59e0b,#f97316)"
+                                : rank == 2
+                                    ? "linear-gradient(135deg,#64748b,#94a3b8)"
+                                    : rank == 3
+                                        ? "linear-gradient(135deg,#dc2626,#f97316)"
+                                        : "linear-gradient(135deg,#4f46e5,#06b6d4)";
+
+                            string rankShadow = rank <= 3
+                                ? "rgba(249,115,22,.24)"
+                                : "rgba(79,70,229,.22)";
+
+                            double diemTB = u.DiemTB;
+
+                            string scoreGrad = diemTB >= 8
+                                ? "linear-gradient(135deg,#16a34a,#22c55e)"
+                                : diemTB >= 5
+                                    ? "linear-gradient(135deg,#4f46e5,#06b6d4)"
+                                    : "linear-gradient(135deg,#dc2626,#f97316)";
+
+                            string scoreShadow = diemTB >= 8
+                                ? "rgba(34,197,94,.28)"
+                                : diemTB >= 5
+                                    ? "rgba(79,70,229,.28)"
+                                    : "rgba(239,68,68,.28)";
+
+                            string displayName = u.TenHienThi ?? "Người dùng";
+                            string initial = displayName.Substring(0, 1).ToUpper();
+
+                            <tr class="rank-row">
+                                <td class="text-center">
+                                    <span class="rank-number"
+                                          style="--rankGrad:@rankGrad;--rankShadow:@rankShadow;">
+                                        @(rank <= 3 ? (rank == 1 ? "🥇" : rank == 2 ? "🥈" : "🥉") : $"#{rank}")
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="user-avatar">@initial</div>
+
+                                        <div>
+                                            <div class="user-name searchable-rank-user">@displayName</div>
+                                            <div class="user-email searchable-rank-email">@u.Email</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="work-pill">
+                                        <i class="fas fa-clipboard-check"></i>
+                                        @u.SoBai bài
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="score-pill"
+                                          style="--scoreGrad:@scoreGrad;--scoreShadow:@scoreShadow;">
+                                        @u.DiemTB đ
+                                    </span>
+                                </td>
+
+                                <td class="text-center fw-black text-secondary">
+                                    @u.DiemCao đ
+                                </td>
+                            </tr>
+
+                            rank++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('searchRank')?.addEventListener('input', function () {
+            const kw = this.value.toLowerCase().trim();
+
+            document.querySelectorAll('.rank-row').forEach(row => {
+                const name = row.querySelector('.searchable-rank-user')?.textContent.toLowerCase() || '';
+                const email = row.querySelector('.searchable-rank-email')?.textContent.toLowerCase() || '';
+
+                row.style.display = name.includes(kw) || email.includes(kw) ? '' : 'none';
+            });
+        });
+    </script>
+}
